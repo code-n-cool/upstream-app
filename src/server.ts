@@ -5,11 +5,11 @@ import { Client } from 'pg';
 dotenv.config();
 
 const client = new Client({
-  user: 'your_db_user',
-  host: 'localhost',
-  database: 'telemetry_db',
-  password: 'your_db_password',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT),
 });
 
 const server = net.createServer((socket) => {

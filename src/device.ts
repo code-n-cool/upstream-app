@@ -1,17 +1,16 @@
 import * as net from 'net';
 import * as dotenv from 'dotenv';
 import { Client } from 'pg';
-import * as os from 'os';
 import si from 'systeminformation';
 
 dotenv.config();
 
 const client = new Client({
-  user: 'your_db_user',
-  host: 'localhost',
-  database: 'telemetry_db',
-  password: 'your_db_password',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT),
 });
 
 const deviceSerial = process.env.DEVICE_SERIAL || 'device-001';
@@ -45,9 +44,13 @@ async function reportTelemetry(frequency: number) {
   }, frequency);
 }
 
-async function main() {
+async function handleReboot() {
   const frequency = await authenticate();
   await reportTelemetry(frequency);
+}
+
+async function main() {
+  await handleReboot();
 }
 
 main().catch(console.error);
