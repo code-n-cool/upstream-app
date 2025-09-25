@@ -3,6 +3,7 @@ import si from 'systeminformation';
 
 const DEVICE_SERIAL = process.env.DEVICE_SERIAL || 'device-001';
 let telemetryFrequency = 5000;
+let telemetryInterval: NodeJS.Timeout | null = null;
 
 const socket = new net.Socket();
 
@@ -33,25 +34,38 @@ socket.on('data', async (data) => {
     case 'updateFrequency':
       telemetryFrequency = message.frequency;
       console.log('Telemetry frequency updated:', telemetryFrequency);
+      restartTelemetry();
       break;
   }
 });
 
 async function startTelemetry() {
-  setInterval(async () => {
+  if (telemetryInterval) clearInterval(telemetryInterval);
+
+  telemetryInterval = setInterval(async () => {
     try {
       const cpuTemp = await si.cpuTemperature();
       const temperature = cpuTemp.main || 0;
-      socket.write(JSON.stringify({ type: 'telemetry', deviceSerial: DEVICE_SERIAL, temperature }));
+      socket.write(
+        JSON.stringify({
+          type: 'telemetry',
+          deviceSerial: DEVICE_SERIAL,
+          temperature,
+        })
+      );
     } catch (error) {
       console.error('Error fetching CPU temperature:', error);
     }
   }, telemetryFrequency);
 }
 
+function restartTelemetry() {
+  startTelemetry();
+}
+
 function handleCommand(command: string) {
   if (command === 'reboot') {
     console.log('Rebooting device...');
-    process.exit(0); 
+    process.exit(0);
   }
 }

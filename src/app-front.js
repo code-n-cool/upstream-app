@@ -15,12 +15,13 @@ function appendTelemetryRow({ timestamp, device_serial, temperature }) {
   row.appendChild(tsCell);
   row.appendChild(serialCell);
   row.appendChild(tempCell);
-  telemetryTableBody.appendChild(row);
+  telemetryTableBody.insertBefore(row, telemetryTableBody.firstChild);
 }
 
 async function loadTelemetry() {
   const res = await fetch('/telemetry');
   const data = await res.json();
+  telemetryTableBody.innerHTML = '';
   data.forEach(appendTelemetryRow);
 }
 
