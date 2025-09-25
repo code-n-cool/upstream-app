@@ -45,14 +45,16 @@ async function startTelemetry() {
   telemetryInterval = setInterval(async () => {
     try {
       const cpuTemp = await si.cpuTemperature();
-      const temperature = cpuTemp.main || 0;
-      socket.write(
-        JSON.stringify({
+      if (cpuTemp.main !== null) {
+        const temperature = cpuTemp.main;
+        socket.write(JSON.stringify({
           type: 'telemetry',
           deviceSerial: DEVICE_SERIAL,
           temperature,
-        })
-      );
+        }));
+      } else {
+        console.warn('CPU temperature not available on this system');
+      }
     } catch (error) {
       console.error('Error fetching CPU temperature:', error);
     }
