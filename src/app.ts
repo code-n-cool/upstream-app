@@ -34,14 +34,6 @@ function notifyFrontendTelemetry(data: any) {
 
 app.use(express.static(path.join(__dirname)));
 
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'index.html'));
-// });
-
-// app.get('/app-front.js', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'app-front.js'));
-// });
-
 app.get('/telemetry', async (req, res) => {
   const { rows } = await client.query('SELECT * FROM telemetry ORDER BY timestamp DESC');
   res.json(rows);
