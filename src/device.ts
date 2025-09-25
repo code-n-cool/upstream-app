@@ -1,56 +1,57 @@
 import * as net from 'net';
-import * as dotenv from 'dotenv';
-import { Client } from 'pg';
 import si from 'systeminformation';
 
-dotenv.config();
+const DEVICE_SERIAL = process.env.DEVICE_SERIAL || 'device-001';
+let telemetryFrequency = 5000;
 
-const client = new Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: Number(process.env.DB_PORT),
+const socket = new net.Socket();
+
+socket.connect(7777, 'localhost', () => {
+  console.log('Connected to server');
+  socket.write(JSON.stringify({ type: 'login', deviceSerial: DEVICE_SERIAL }));
 });
 
-const deviceSerial = process.env.DEVICE_SERIAL || 'device-001';
+socket.on('data', async (data) => {
+  const message = JSON.parse(data.toString());
 
-async function authenticate() {
-  await client.connect();
-  const res = await client.query('SELECT * FROM devices WHERE serial = $1', [deviceSerial]);
-  if (res.rowCount === 0) {
-    console.log('Authentication failed!');
-    process.exit(1);
+  switch (message.type) {
+    case 'loginResponse':
+      if (message.success) {
+        telemetryFrequency = message.frequency;
+        console.log('Login successful. Reporting frequency:', telemetryFrequency);
+        startTelemetry();
+      } else {
+        console.log('Login failed');
+        process.exit(1);
+      }
+      break;
+
+    case 'command':
+      handleCommand(message.command);
+      break;
+
+    case 'updateFrequency':
+      telemetryFrequency = message.frequency;
+      console.log('Telemetry frequency updated:', telemetryFrequency);
+      break;
   }
-  console.log('Authenticated:', res.rows[0]);
-  return res.rows[0].frequency;
-}
+});
 
-async function reportTelemetry(frequency: number) {
-  const socket = new net.Socket();
-  socket.connect(7777, 'localhost', () => {
-    console.log('Connected to server.');
-  });
-
+async function startTelemetry() {
   setInterval(async () => {
     try {
       const cpuTemp = await si.cpuTemperature();
       const temperature = cpuTemp.main || 0;
-      const payload = JSON.stringify({ deviceSerial, temperature });
-      socket.write(payload);
+      socket.write(JSON.stringify({ type: 'telemetry', deviceSerial: DEVICE_SERIAL, temperature }));
     } catch (error) {
       console.error('Error fetching CPU temperature:', error);
     }
-  }, frequency);
+  }, telemetryFrequency);
 }
 
-async function handleReboot() {
-  const frequency = await authenticate();
-  await reportTelemetry(frequency);
+function handleCommand(command: string) {
+  if (command === 'reboot') {
+    console.log('Rebooting device...');
+    process.exit(0); 
+  }
 }
-
-async function main() {
-  await handleReboot();
-}
-
-main().catch(console.error);

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Device Telemetry Dashboard</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid #aaa;
+      padding: 5px 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #ddd;
+    }
+
+    #controls {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Device Telemetry Dashboard</h1>
+  
+  <div id="controls">
+    <label>Device Serial:
+      <input type="text" id="deviceSerial" value="device-001">
+    </label>
+    <label>Frequency (ms):
+      <input type="number" id="freqInput" value="5000">
+    </label>
+    <button id="updateFreq">Update Frequency</button>
+    <button id="rebootBtn">Reboot Device</button>
+  </div>
+
+  <div>
+    <h2>Telemetry Table</h2>
+    <table id="telemetryTable">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Device Serial</th>
+          <th>Temperature (°C)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script src="/app-front.js"></script>
+</body>
+
+</html>
